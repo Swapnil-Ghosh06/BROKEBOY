@@ -1,6 +1,6 @@
-# FinTrack: Student Expense Tracker 💸
+# BrokeBoy. — Cinematic Student Finance 💸
 
-A premium, full-stack expense tracking application designed specifically for students to log daily micro-expenses frictionlessly. Built as a college final assessment project with a focus on dark glassmorphism fintech design and smooth animations.
+**BrokeBoy.** is a premium, full-stack expense tracking application designed specifically for students who want to manage their money with style. It moves away from boring spreadsheets and into a high-fidelity, interactive "Bento-style" dashboard experience.
 
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
@@ -13,12 +13,12 @@ A premium, full-stack expense tracking application designed specifically for stu
 
 ## ✨ Features
 
-- **Lightning Fast Logging:** Add an expense in under 5 seconds with an intuitive, slide-up floating action button.
-- **Premium Design:** Dark glassmorphism aesthetics, dynamic background glow, and meticulous typography.
-- **Micro-Animations:** Fluid GSAP and Framer Motion animations for initial load, list stagger, item entry/exit, and 3D card tilt effects.
-- **Live Summary:** An animated counter displays your total spending, broken down into colorful category pills.
-- **Data Persistence:** Expenses are instantly saved and retrieved from a MongoDB database using an Express backend.
-- **Optimistic UI:** Instant UI updates while backend calls resolve in the background.
+- **Bento Dashboard:** A beautiful, grid-based layout that organizes your financial life into clean, interactive modules.
+- **Interactive Glass Wallet:** A physics-enabled, draggable wallet card that feels tactile and alive.
+- **Animated Budget Ring:** A GSAP-driven visual gauge that tracks your monthly limit with real-time color shifts.
+- **Market News Engine:** Stay informed with a live feed of the latest business, crypto, and fintech news.
+- **Premium Cinematic UI:** Dark glassmorphism aesthetics, dynamic "Align" inspired typography, and smooth micro-animations.
+- **Optimistic CRUD:** Instant UI updates for adding/deleting expenses while the MongoDB backend syncs in the background.
 
 ---
 
