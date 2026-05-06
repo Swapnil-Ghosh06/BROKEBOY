@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/client/$1"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/client"
+    }
+  ]
+}
