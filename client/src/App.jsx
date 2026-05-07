@@ -13,7 +13,7 @@ import { Home, LayoutGrid, Newspaper, User } from 'lucide-react';
 
 import BentoDashboard from './components/BentoDashboard';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
