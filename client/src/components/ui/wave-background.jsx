@@ -56,9 +56,8 @@ export function Waves({
         pathsRef.current.forEach(path => path.remove());
         pathsRef.current = [];
 
-        // Reduced density for better performance
-        const xGap = width > 768 ? 30 : 44;
-        const yGap = width > 768 ? 40 : 56;
+        const xGap = width > 768 ? 19 : 28;
+        const yGap = width > 768 ? 28 : 40;
 
         const oWidth = width + 200;
         const oHeight = height + 30;
