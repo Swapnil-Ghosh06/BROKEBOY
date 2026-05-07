@@ -13,6 +13,18 @@ app.use(cors());
 // Routes
 app.use('/api/expenses', expenses);
 
+// Debug route
+app.get('/api/health', (req, res) => {
+  const mongoose = require('mongoose');
+  const uri = process.env.MONGO_URI;
+  res.json({
+    mongoUriSet: !!uri,
+    mongoUriPreview: uri ? `${uri.slice(0, 30)}...` : 'NOT SET',
+    dbState: mongoose.connection.readyState,
+    dbError: global.lastDbError || null,
+  });
+});
+
 // In-memory store fallback for when MongoDB is not connected
 global.mockExpenses = [];
 
@@ -30,6 +42,13 @@ const connectDB = async () => {
   } catch (error) {
     global.lastDbError = error.message;
     console.error(`❌ Error connecting to MongoDB: ${error.message}`);
+    
+    // Add a helpful hint for common connection issues
+    if (error.message.includes('IP') || error.message.includes('connect')) {
+      console.info("💡 Hint: This usually means your current IP address is not whitelisted in MongoDB Atlas.");
+      console.info("👉 To fix: Go to MongoDB Atlas -> Network Access -> Add IP Address -> Add Current IP Address (or 0.0.0.0/0).");
+    }
+    
     console.warn("⚠️  Falling back to IN-MEMORY MOCK MODE due to connection error.");
   }
 };
