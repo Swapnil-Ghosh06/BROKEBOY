@@ -9,10 +9,10 @@ router.get('/', async (req, res) => {
   try {
     if (mongoose.connection.readyState !== 1) {
       const expenses = [...global.mockExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
-      return res.json({ success: true, data: expenses });
+      return res.json({ success: true, data: expenses, isMock: true });
     }
     const expenses = await Expense.find().sort({ date: -1 });
-    res.json({ success: true, data: expenses });
+    res.json({ success: true, data: expenses, isMock: false });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server Error' });
   }
@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
         createdAt: new Date().toISOString()
       };
       global.mockExpenses.push(newExpense);
-      return res.status(201).json({ success: true, data: newExpense });
+      return res.status(201).json({ success: true, data: newExpense, isMock: true });
     }
 
     const expense = await Expense.create({
@@ -48,7 +48,7 @@ router.post('/', async (req, res) => {
       date: date || Date.now()
     });
 
-    res.status(201).json({ success: true, data: expense });
+    res.status(201).json({ success: true, data: expense, isMock: false });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: 'Server Error' });

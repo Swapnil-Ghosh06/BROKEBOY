@@ -19,6 +19,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [expenses, setExpenses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMock, setIsMock] = useState(false);
   
   // Wallet State
   const [initialBalance, setInitialBalance] = useState(10000);
@@ -33,6 +34,7 @@ function App() {
       const res = await axios.get(`${API_URL}/api/expenses`);
       if (res.data.success) {
         setExpenses(res.data.data);
+        setIsMock(res.data.isMock);
       }
     } catch (error) {
       console.error('Error fetching expenses:', error);
@@ -42,6 +44,11 @@ function App() {
   };
 
   const handleAddExpense = async (newExpenseData) => {
+    if (newExpenseData.amount > currentBalance) {
+      alert(`Insufficient balance! You only have ₹${currentBalance.toLocaleString('en-IN')} remaining.`);
+      return;
+    }
+
     const tempId = Math.random().toString(36).substr(2, 9);
     const optimisticExpense = { ...newExpenseData, _id: tempId, createdAt: new Date().toISOString() };
     setExpenses(prev => [optimisticExpense, ...prev]);
@@ -66,6 +73,14 @@ function App() {
       await axios.delete(`${API_URL}/api/expenses/${id}`);
     } catch (error) {
       console.error('Error deleting expense:', error);
+      
+      // If it's a 404, it means the server doesn't have it (likely due to a restart in mock mode)
+      // In this case, we don't need to restore the state as it's effectively "deleted"
+      if (error.response && error.response.status === 404) {
+        console.warn('Expense already deleted or server restarted in mock mode.');
+        return;
+      }
+
       setExpenses(previousExpenses);
       alert('Failed to delete expense.');
     }
@@ -93,6 +108,12 @@ function App() {
   return (
     <>
       <Waves />
+      
+      {isMock && (
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-orange-500/10 backdrop-blur-md border-b border-orange-500/20 py-1.5 text-center text-[10px] uppercase tracking-widest text-orange-400 font-bold">
+          ⚠️ Mock Mode Active: Persistence limited. Connect MongoDB for full data security.
+        </div>
+      )}
       
       {/* Floating Vertical Navigation Sidebar */}
       <div className="fixed top-1/2 left-6 -translate-y-1/2 z-50 flex flex-col pointer-events-none hidden md:flex">
