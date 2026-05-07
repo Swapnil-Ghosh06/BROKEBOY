@@ -9,10 +9,20 @@ router.get('/', async (req, res) => {
   try {
     if (mongoose.connection.readyState !== 1) {
       const expenses = [...global.mockExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
-      return res.json({ success: true, data: expenses, isMock: true });
+      return res.json({ 
+        success: true, 
+        data: expenses, 
+        isMock: true,
+        dbError: global.lastDbError 
+      });
     }
     const expenses = await Expense.find().sort({ date: -1 });
-    res.json({ success: true, data: expenses, isMock: false });
+    res.json({ 
+      success: true, 
+      data: expenses, 
+      isMock: false,
+      dbError: null
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server Error' });
   }

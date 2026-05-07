@@ -13,16 +13,6 @@ app.use(cors());
 // Routes
 app.use('/api/expenses', expenses);
 
-let lastDbError = null;
-app.get('/api/debug-db', (req, res) => {
-  res.json({
-    connected: mongoose.connection.readyState === 1,
-    hasUri: !!process.env.MONGO_URI,
-    uriFound: process.env.MONGO_URI && !process.env.MONGO_URI.includes('<username>'),
-    error: lastDbError
-  });
-});
-
 // In-memory store fallback for when MongoDB is not connected
 global.mockExpenses = [];
 
@@ -36,9 +26,9 @@ const connectDB = async () => {
     }
     const conn = await mongoose.connect(process.env.MONGO_URI);
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-    lastDbError = null;
+    global.lastDbError = null;
   } catch (error) {
-    lastDbError = error.message;
+    global.lastDbError = error.message;
     console.error(`❌ Error connecting to MongoDB: ${error.message}`);
     console.warn("⚠️  Falling back to IN-MEMORY MOCK MODE due to connection error.");
   }
