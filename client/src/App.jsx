@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import axios from 'axios';
 import gsap from 'gsap';
 import SummaryBar from './components/SummaryBar';
@@ -207,35 +208,72 @@ function App() {
         )}
       </div>
 
-      {activeTab === 'dashboard' ? (
-        isLoading ? (
-          <div className="min-h-screen flex items-center justify-center relative z-10">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
-          </div>
+      <AnimatePresence mode="wait">
+        {activeTab === 'dashboard' ? (
+          isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="min-h-screen flex items-center justify-center relative z-10"
+            >
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="dashboard"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+            >
+              <BentoDashboard
+                expenses={expenses}
+                totalExpenses={totalExpenses}
+                monthlyLimit={monthlyLimit}
+                currentBalance={currentBalance}
+                percentageUsed={percentageUsed}
+                isOverLimit={isOverLimit}
+                onDelete={handleDeleteExpense}
+              />
+            </motion.div>
+          )
+        ) : activeTab === 'features' ? (
+          <motion.div
+            key="features"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+            className="pt-10"
+          >
+            <InteractiveSelector />
+          </motion.div>
+        ) : activeTab === 'about' ? (
+          <motion.div
+            key="about"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+            className="pt-10"
+          >
+            <About />
+          </motion.div>
         ) : (
-          <BentoDashboard 
-            expenses={expenses}
-            totalExpenses={totalExpenses}
-            monthlyLimit={monthlyLimit}
-            currentBalance={currentBalance}
-            percentageUsed={percentageUsed}
-            isOverLimit={isOverLimit}
-            onDelete={handleDeleteExpense}
-          />
-        )
-      ) : activeTab === 'features' ? (
-        <div className="pt-10">
-          <InteractiveSelector />
-        </div>
-      ) : activeTab === 'about' ? (
-        <div className="pt-10">
-          <About />
-        </div>
-      ) : (
-        <div className="pt-10">
-          <Learn />
-        </div>
-      )}
+          <motion.div
+            key="learn"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+            className="pt-10"
+          >
+            <Learn />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <ExpenseForm onAddExpense={handleAddExpense} />
     </>

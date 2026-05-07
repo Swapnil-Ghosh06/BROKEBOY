@@ -88,11 +88,13 @@ function BudgetRing({ percentage, isOver }) {
 function StatCard({ icon: Icon, label, value, subtext, accentColor, delay = 0 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
-      whileHover={{ y: -4, scale: 1.02 }}
-      className="glass rounded-2xl p-5 border border-white/5 relative overflow-hidden group cursor-default"
+      initial={{ opacity: 0, y: 24, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 22, delay }}
+      whileHover={{ y: -8, scale: 1.04 }}
+      whileTap={{ scale: 0.97 }}
+      style={{ transition: 'box-shadow 0.3s ease' }}
+      className="glass rounded-2xl p-5 border border-white/5 relative overflow-hidden group cursor-default hover:border-white/15 hover:shadow-[0_8px_32px_rgba(255,255,255,0.06)]"
     >
       <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-5 group-hover:opacity-10 transition-opacity duration-500"
         style={{ background: accentColor, filter: 'blur(20px)', transform: 'translate(30%, -30%)' }}

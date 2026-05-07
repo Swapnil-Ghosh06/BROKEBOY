@@ -19,8 +19,8 @@ export default function ExpenseCard({ expense, onDelete }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  const mouseXSpring = useSpring(x, { stiffness: 300, damping: 20 });
-  const mouseYSpring = useSpring(y, { stiffness: 300, damping: 20 });
+  const mouseXSpring = useSpring(x, { stiffness: 180, damping: 18 });
+  const mouseYSpring = useSpring(y, { stiffness: 180, damping: 18 });
 
   const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["7.5deg", "-7.5deg"]);
   const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-7.5deg", "7.5deg"]);
@@ -52,10 +52,11 @@ export default function ExpenseCard({ expense, onDelete }) {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.85, x: 40 }}
-      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      transition={{ type: "spring", stiffness: 260, damping: 22 }}
+      whileHover={{ scale: 1.025, y: -3 }}
       style={{
         rotateX,
         rotateY,
@@ -64,7 +65,7 @@ export default function ExpenseCard({ expense, onDelete }) {
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={handleMouseLeave}
-      className="glass rounded-2xl relative overflow-hidden flex mb-4 group cursor-pointer"
+      className="glass rounded-2xl relative overflow-hidden flex mb-4 group cursor-pointer hover:border-white/15 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
     >
       {/* Accent Bar */}
       <div className={`w-1 shrink-0 ${config.color}`} />
