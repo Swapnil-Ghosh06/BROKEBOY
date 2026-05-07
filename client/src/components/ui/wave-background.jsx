@@ -207,7 +207,7 @@ export function Waves({
         mouse.a = Math.atan2(dy, dx);
 
         frameSkipRef.current = (frameSkipRef.current + 1) % 4;
-        if (frameSkipRef.current === 0) {
+        if (frameSkipRef.current !== 0) {
             movePoints(time);
             drawLines();
         }
