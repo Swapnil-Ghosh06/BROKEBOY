@@ -20,6 +20,7 @@ function App() {
   const [expenses, setExpenses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMock, setIsMock] = useState(false);
+  const [dbError, setDbError] = useState(null);
   
   // Wallet State
   const [initialBalance, setInitialBalance] = useState(10000);
@@ -35,6 +36,7 @@ function App() {
       if (res.data.success) {
         setExpenses(res.data.data);
         setIsMock(res.data.isMock);
+        setDbError(res.data.dbError);
       }
     } catch (error) {
       console.error('Error fetching expenses:', error);
@@ -110,8 +112,8 @@ function App() {
       <Waves />
       
       {isMock && (
-        <div className="fixed top-0 left-0 right-0 z-[100] bg-orange-500/10 backdrop-blur-md border-b border-orange-500/20 py-1.5 text-center text-[10px] uppercase tracking-widest text-orange-400 font-bold">
-          ⚠️ Mock Mode Active: Persistence limited. Connect MongoDB for full data security.
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-orange-500/10 backdrop-blur-md border-b border-orange-500/20 py-1.5 text-center text-[10px] uppercase tracking-widest text-orange-400 font-bold px-4">
+          ⚠️ Mock Mode Active: Persistence limited. {dbError ? `Error: ${dbError}` : 'Connect MongoDB for full data security.'}
         </div>
       )}
       
