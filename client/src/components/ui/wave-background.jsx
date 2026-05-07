@@ -17,6 +17,7 @@ export function Waves({
     const noiseRef = useRef(null);
     const rafRef = useRef(null);
     const boundingRef = useRef(null);
+    const frameSkipRef = useRef(0);
 
     useEffect(() => {
         if (!containerRef.current || !svgRef.current) return;
@@ -55,9 +56,9 @@ export function Waves({
         pathsRef.current.forEach(path => path.remove());
         pathsRef.current = [];
 
-        // Dynamic density based on screen width for better performance
-        const xGap = width > 768 ? 12 : 20; 
-        const yGap = width > 768 ? 24 : 32;
+        // Reduced density for better performance
+        const xGap = width > 768 ? 30 : 44;
+        const yGap = width > 768 ? 40 : 56;
 
         const oWidth = width + 200;
         const oHeight = height + 30;
@@ -210,8 +211,11 @@ export function Waves({
             containerRef.current.style.setProperty('--y', `${mouse.sy}px`);
         }
 
-        movePoints(time);
-        drawLines();
+        frameSkipRef.current = (frameSkipRef.current + 1) % 2;
+        if (frameSkipRef.current === 0) {
+            movePoints(time);
+            drawLines();
+        }
 
         rafRef.current = requestAnimationFrame(tick);
     };
@@ -230,6 +234,7 @@ export function Waves({
             <svg
                 ref={svgRef}
                 className="block w-full h-full"
+                style={{ willChange: 'auto' }}
                 xmlns="http://www.w3.org/2000/svg"
             >
                 <defs>
