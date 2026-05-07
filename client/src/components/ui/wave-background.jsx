@@ -118,9 +118,10 @@ export function Waves({
             mouse.set = true;
         }
 
+        // Update cursor dot instantly with raw position — not tied to RAF
         if (containerRef.current) {
-            containerRef.current.style.setProperty('--x', `${mouse.sx}px`);
-            containerRef.current.style.setProperty('--y', `${mouse.sy}px`);
+            containerRef.current.style.setProperty('--x', `${mouse.x}px`);
+            containerRef.current.style.setProperty('--y', `${mouse.y}px`);
         }
     };
 
@@ -205,12 +206,7 @@ export function Waves({
         mouse.ly = mouse.y;
         mouse.a = Math.atan2(dy, dx);
 
-        if (containerRef.current) {
-            containerRef.current.style.setProperty('--x', `${mouse.sx}px`);
-            containerRef.current.style.setProperty('--y', `${mouse.sy}px`);
-        }
-
-        frameSkipRef.current = (frameSkipRef.current + 1) % 2;
+        frameSkipRef.current = (frameSkipRef.current + 1) % 4;
         if (frameSkipRef.current === 0) {
             movePoints(time);
             drawLines();
