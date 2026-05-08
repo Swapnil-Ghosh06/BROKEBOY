@@ -36,29 +36,37 @@ global.lastDbError = null;
 global.mockExpenses = [];
 
 // Connect to MongoDB
+let cachedDb = null;
+
 const connectDB = async () => {
+  if (cachedDb && mongoose.connection.readyState === 1) {
+    return cachedDb;
+  }
+
   try {
     const uri = process.env.MONGO_URI;
-    
     if (!uri) {
-      global.lastDbError = "MONGO_URI is completely missing.";
+      global.lastDbError = "MONGO_URI is missing.";
       return;
     }
 
-    // Better obfuscation: keep mongodb://user: and replace password
-    const safeUri = uri.replace(/\/\/(.*?):(.*?)@/, '// $1:****@');
+    const safeUri = uri.replace(/\/\/(.*?):(.*?)@/, '//$1:****@');
     console.log(`🔍 Connecting to: ${safeUri}`);
 
-    await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 10000,
+    const conn = await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 15000,
       socketTimeoutMS: 45000,
+      connectTimeoutMS: 15000,
     });
-    
+
     console.log(`✅ MongoDB Connected Successfully`);
     global.lastDbError = null;
+    cachedDb = conn;
+    return conn;
   } catch (error) {
     global.lastDbError = `${error.name}: ${error.message}`;
     console.error(`❌ MongoDB Connection Error: ${error.name}`);
+    cachedDb = null;
   }
 };
 
