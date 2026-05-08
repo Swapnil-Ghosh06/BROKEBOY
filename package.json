@@ -4,8 +4,8 @@
   "description": "A premium, full-stack expense tracking application designed specifically for students to log daily micro-expenses frictionlessly. Built as a college final assessment project with a focus on dark glassmorphism fintech design and smooth animations.",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix api\" \"npm run dev --prefix client\"",
-    "dev:server": "npm run dev --prefix api",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
     "build": "npm run build --prefix client",
     "test": "echo \"Error: no test specified\" && exit 1"

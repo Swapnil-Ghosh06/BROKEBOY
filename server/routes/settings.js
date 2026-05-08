@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
     let settings = await Settings.findOne();
     if (!settings) {
       // Create default settings if they don't exist
-      settings = await Settings.create({ initialBalance: 10000, monthlyLimit: 5000 });
+      settings = await Settings.create({ initialBalance: 0, monthlyLimit: 0 });
     }
     res.json({ success: true, data: settings });
   } catch (error) {

@@ -1,36 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const Expense = require('../models/Expense');
+
 const mongoose = require('mongoose');
-
-// Middleware to check DB connection status
-const checkConnection = (req, res, next) => {
-  // We no longer wait/block. We just check the state.
-  // This prevents UI timeouts on refresh.
-  next();
-};
-
-router.use(checkConnection);
 
 // GET /api/expenses - Fetch all expenses (sorted by date desc)
 router.get('/', async (req, res) => {
   try {
     if (mongoose.connection.readyState !== 1) {
       const expenses = [...global.mockExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
-      return res.json({ 
-        success: true, 
-        data: expenses, 
-        isMock: true,
-        dbError: global.lastDbError || "Database is disconnected or still connecting."
-      });
+      return res.json({ success: true, data: expenses });
     }
     const expenses = await Expense.find().sort({ date: -1 });
-    res.json({ 
-      success: true, 
-      data: expenses, 
-      isMock: false,
-      dbError: null
-    });
+    res.json({ success: true, data: expenses });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server Error' });
   }
@@ -56,7 +38,7 @@ router.post('/', async (req, res) => {
         createdAt: new Date().toISOString()
       };
       global.mockExpenses.push(newExpense);
-      return res.status(201).json({ success: true, data: newExpense, isMock: true });
+      return res.status(201).json({ success: true, data: newExpense });
     }
 
     const expense = await Expense.create({
@@ -66,7 +48,7 @@ router.post('/', async (req, res) => {
       date: date || Date.now()
     });
 
-    res.status(201).json({ success: true, data: expense, isMock: false });
+    res.status(201).json({ success: true, data: expense });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: 'Server Error' });

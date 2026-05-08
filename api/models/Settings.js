@@ -3,11 +3,11 @@ const mongoose = require('mongoose');
 const SettingsSchema = new mongoose.Schema({
   initialBalance: {
     type: Number,
-    default: 10000
+    default: 0
   },
   monthlyLimit: {
     type: Number,
-    default: 5000
+    default: 0
   }
 }, { timestamps: true });
 

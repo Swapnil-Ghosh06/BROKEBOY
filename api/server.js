@@ -1,5 +1,5 @@
 const path = require('path');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -16,61 +16,38 @@ app.use(cors());
 app.use('/api/expenses', expenses);
 app.use('/api/settings', settings);
 
-// Debug route
+// Health check endpoint
 app.get('/api/health', (req, res) => {
-  const uri = process.env.MONGO_URI;
   res.json({
-    mongoUriSet: !!uri,
-    uriLength: uri ? uri.length : 0,
-    uriStartsWith: uri ? uri.slice(0, 15) : 'N/A',
-    uriEndsWith: uri ? uri.slice(-15) : 'N/A',
-    hasQuotes: uri ? (uri.startsWith('"') || uri.startsWith("'")) : false,
+    status: 'online',
+    dbConnected: mongoose.connection.readyState === 1,
     dbState: mongoose.connection.readyState,
-    dbError: global.lastDbError || null,
-    nodeEnv: process.env.NODE_ENV
+    nodeEnv: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
   });
 });
 
 // In-memory store fallback for when MongoDB is not connected
 global.mockExpenses = [];
 
-// MongoDB Connection Event Listeners
-mongoose.connection.on('connected', () => {
-  console.log('✅ Mongoose connected to MongoDB Cluster');
-  global.lastDbError = null;
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error(`❌ Mongoose connection error: ${err.message}`);
-  global.lastDbError = err.message;
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.warn('⚠️ Mongoose disconnected from MongoDB');
-});
-
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    console.log("🔍 Attempting to connect to MongoDB...");
-    console.log(`📡 URI found: ${process.env.MONGO_URI ? 'YES' : 'NO'}`);
+    const uri = process.env.MONGO_URI;
     
-    if (!process.env.MONGO_URI || process.env.MONGO_URI.includes('<username>') || process.env.MONGO_URI.includes('<password>')) {
-      global.lastDbError = "MONGO_URI is missing or contains placeholders.";
-      console.warn("⚠️  MONGO_URI is not defined or is still a placeholder.");
+    if (!uri || uri.includes('<username>') || uri.includes('<password>')) {
+      console.warn("⚠️  MONGO_URI is missing or contains placeholders. Switching to IN-MEMORY MOCK MODE.");
       return;
     }
-    
-    // Set connection options for better stability in 2026
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
+
+    console.log("🔍 Attempting to connect to MongoDB...");
+    const conn = await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
     });
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-    global.lastDbError = null;
   } catch (error) {
-    global.lastDbError = error.message;
-    console.error(`❌ Initial connection error: ${error.message}`);
+    console.error(`❌ MongoDB Connection Error: ${error.message}`);
+    console.warn("⚠️  Falling back to IN-MEMORY MOCK MODE due to connection error.");
   }
 };
 
@@ -85,3 +62,4 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 module.exports = app;
+
