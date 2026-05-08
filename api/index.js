@@ -1,4 +1,4 @@
-const app = require('../server/server.js');
+const app = require('./server.js');
 const mongoose = require('mongoose');
 
 module.exports = async (req, res) => {
