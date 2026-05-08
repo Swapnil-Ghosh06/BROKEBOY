@@ -20,6 +20,7 @@ function App() {
   const [expenses, setExpenses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDbConnected, setIsDbConnected] = useState(false);
+  const [dbError, setDbError] = useState(null);
   
   // Wallet State
   const [initialBalance, setInitialBalance] = useState(0);
@@ -35,9 +36,11 @@ function App() {
     try {
       const res = await axios.get(`${API_URL}/api/health`);
       setIsDbConnected(res.data.dbConnected);
+      setDbError(res.data.dbError);
     } catch (error) {
       console.error('Health check failed:', error);
       setIsDbConnected(false);
+      setDbError('API Server Unreachable');
     }
   };
 
@@ -199,11 +202,19 @@ function App() {
       </div>
 
       <div className="fixed top-6 right-6 z-[60] flex items-center gap-3">
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full glass border transition-all duration-500 ${isDbConnected ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
+        <div 
+          title={dbError || (isDbConnected ? 'Connected to MongoDB Atlas' : 'Checking connection...')}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full glass border transition-all duration-500 cursor-help ${isDbConnected ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'}`}
+        >
           <div className={`w-2 h-2 rounded-full ${isDbConnected ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
           <span className={`text-[10px] font-bold uppercase tracking-widest ${isDbConnected ? 'text-emerald-400' : 'text-red-400'}`}>
             {isDbConnected ? 'Database Online' : 'Database Offline'}
           </span>
+          {dbError && !isDbConnected && (
+            <span className="text-[9px] text-red-500/60 font-mono ml-1 max-w-[150px] truncate">
+              ({dbError})
+            </span>
+          )}
         </div>
       </div>
       <div className="fixed top-1/2 right-6 -translate-y-1/2 z-50 w-full max-w-[320px] pointer-events-auto hidden xl:block">

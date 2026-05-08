@@ -22,10 +22,14 @@ app.get('/api/health', (req, res) => {
     status: 'online',
     dbConnected: mongoose.connection.readyState === 1,
     dbState: mongoose.connection.readyState,
+    dbError: global.lastDbError || null,
     nodeEnv: process.env.NODE_ENV,
     timestamp: new Date().toISOString()
   });
 });
+
+// Store last DB error globally for debugging
+global.lastDbError = null;
 
 // In-memory store fallback for when MongoDB is not connected
 global.mockExpenses = [];
@@ -36,7 +40,8 @@ const connectDB = async () => {
     const uri = process.env.MONGO_URI;
     
     if (!uri || uri.includes('<username>') || uri.includes('<password>')) {
-      console.warn("⚠️  MONGO_URI is missing or contains placeholders. Switching to IN-MEMORY MOCK MODE.");
+      global.lastDbError = "MONGO_URI is missing or contains placeholders.";
+      console.warn("⚠️  MONGO_URI is missing or contains placeholders.");
       return;
     }
 
@@ -45,9 +50,10 @@ const connectDB = async () => {
       serverSelectionTimeoutMS: 5000,
     });
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    global.lastDbError = null;
   } catch (error) {
+    global.lastDbError = error.message;
     console.error(`❌ MongoDB Connection Error: ${error.message}`);
-    console.warn("⚠️  Falling back to IN-MEMORY MOCK MODE due to connection error.");
   }
 };
 
