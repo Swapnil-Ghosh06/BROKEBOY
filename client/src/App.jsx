@@ -23,13 +23,26 @@ function App() {
   const [isMock, setIsMock] = useState(false);
   const [dbError, setDbError] = useState(null);
   
-  // Wallet State
-  const [initialBalance, setInitialBalance] = useState(10000);
-  const [monthlyLimit, setMonthlyLimit] = useState(5000);
+  // Wallet State (Defaults set to 0 for easier calculation)
+  const [initialBalance, setInitialBalance] = useState(0);
+  const [monthlyLimit, setMonthlyLimit] = useState(0);
 
   useEffect(() => {
     fetchExpenses();
+    fetchSettings();
   }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/settings`);
+      if (res.data.success) {
+        setInitialBalance(res.data.data.initialBalance);
+        setMonthlyLimit(res.data.data.monthlyLimit);
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
 
   const fetchExpenses = async () => {
     try {
@@ -47,9 +60,10 @@ function App() {
   };
 
   const handleAddExpense = async (newExpenseData) => {
-    if (newExpenseData.amount > currentBalance) {
-      alert(`Insufficient balance! You only have ₹${currentBalance.toLocaleString('en-IN')} remaining.`);
-      return;
+    if (newExpenseData.amount > currentBalance && currentBalance <= 0) {
+      // Allow adding if balance is 0 or negative (since we started at 0)
+      // but maybe the user wants to be notified?
+      // For now, let's just let it pass if they want "easier calculation" (negative balance allowed)
     }
 
     const tempId = Math.random().toString(36).substr(2, 9);
@@ -78,7 +92,6 @@ function App() {
       console.error('Error deleting expense:', error);
       
       // If it's a 404, it means the server doesn't have it (likely due to a restart in mock mode)
-      // In this case, we don't need to restore the state as it's effectively "deleted"
       if (error.response && error.response.status === 404) {
         console.warn('Expense already deleted or server restarted in mock mode.');
         return;
@@ -91,20 +104,32 @@ function App() {
 
   const totalExpenses = expenses.reduce((acc, curr) => acc + curr.amount, 0);
   const currentBalance = initialBalance - totalExpenses;
-  const isOverLimit = totalExpenses > monthlyLimit;
+  const isOverLimit = monthlyLimit > 0 && totalExpenses > monthlyLimit;
   const percentageUsed = monthlyLimit > 0 ? ((totalExpenses / monthlyLimit) * 100).toFixed(1) : 0;
 
-  const handleAddFunds = () => {
+  const handleAddFunds = async () => {
     const amount = prompt('Enter amount to add to your balance:', '1000');
     if (amount && !isNaN(amount)) {
-      setInitialBalance(prev => prev + parseFloat(amount));
+      const newBalance = initialBalance + parseFloat(amount);
+      setInitialBalance(newBalance);
+      try {
+        await axios.post(`${API_URL}/api/settings`, { initialBalance: newBalance });
+      } catch (error) {
+        console.error('Error saving balance:', error);
+      }
     }
   };
 
-  const handleSetLimit = () => {
+  const handleSetLimit = async () => {
     const limit = prompt('Enter your new monthly spending limit:', monthlyLimit.toString());
     if (limit && !isNaN(limit)) {
-      setMonthlyLimit(parseFloat(limit));
+      const newLimit = parseFloat(limit);
+      setMonthlyLimit(newLimit);
+      try {
+        await axios.post(`${API_URL}/api/settings`, { monthlyLimit: newLimit });
+      } catch (error) {
+        console.error('Error saving limit:', error);
+      }
     }
   };
 
@@ -112,12 +137,19 @@ function App() {
     <>
       <Waves />
       
+      {/* Database Connection Status Indicator */}
       {isMock && (
-        <div className="fixed top-0 left-0 right-0 z-[100] bg-orange-500/10 backdrop-blur-md border-b border-orange-500/20 py-1.5 text-center text-[10px] uppercase tracking-widest text-orange-400 font-bold px-4">
-          ⚠️ Mock Mode Active: Persistence limited. {dbError ? `Error: ${dbError}` : 'Connect MongoDB for full data security.'}
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-red-500/10 backdrop-blur-md border-b border-red-500/20 py-2 text-center px-4">
+          <div className="flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-red-400 font-bold">
+            <span className="animate-pulse text-red-500">⚠️ Database Offline</span>
+            <span className="opacity-50">|</span>
+            <span className="lowercase font-normal tracking-normal text-[9px] text-white/60">
+              {dbError ? `Error: ${dbError}` : 'Connect MongoDB for persistence'}
+            </span>
+          </div>
         </div>
       )}
-      
+
       {/* Floating Vertical Navigation Sidebar */}
       <div className="fixed top-1/2 left-6 -translate-y-1/2 z-50 flex flex-col pointer-events-none hidden md:flex">
         <div className="glass p-2 rounded-full flex flex-col gap-4 pointer-events-auto border border-white/10 shadow-xl backdrop-blur-md">

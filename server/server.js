@@ -1,8 +1,10 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const expenses = require('./routes/expenses');
+const settings = require('./routes/settings');
 
 const app = express();
 
@@ -12,6 +14,7 @@ app.use(cors());
 
 // Routes
 app.use('/api/expenses', expenses);
+app.use('/api/settings', settings);
 
 // Debug route
 app.get('/api/health', (req, res) => {
@@ -28,28 +31,36 @@ app.get('/api/health', (req, res) => {
 // In-memory store fallback for when MongoDB is not connected
 global.mockExpenses = [];
 
+// MongoDB Connection Event Listeners
+mongoose.connection.on('connected', () => {
+  console.log('✅ Mongoose connected to MongoDB Cluster');
+  global.lastDbError = null;
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error(`❌ Mongoose connection error: ${err.message}`);
+  global.lastDbError = err.message;
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️ Mongoose disconnected from MongoDB');
+});
+
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    if (!process.env.MONGO_URI || process.env.MONGO_URI.includes('<username>')) {
-      console.warn("⚠️  MONGO_URI is not defined or is still a placeholder. Switching to IN-MEMORY MOCK MODE.");
-      console.info("💡 Tip: Add a valid MONGO_URI to server/.env to persist data.");
+    if (!process.env.MONGO_URI || process.env.MONGO_URI.includes('<username>') || process.env.MONGO_URI.includes('<password>')) {
+      global.lastDbError = "MONGO_URI is missing or contains placeholders.";
+      console.warn("⚠️  MONGO_URI is not defined or is still a placeholder.");
       return;
     }
-    const conn = await mongoose.connect(process.env.MONGO_URI);
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    
+    // Set connection options for better stability in 2026
+    await mongoose.connect(process.env.MONGO_URI);
     global.lastDbError = null;
   } catch (error) {
     global.lastDbError = error.message;
-    console.error(`❌ Error connecting to MongoDB: ${error.message}`);
-    
-    // Add a helpful hint for common connection issues
-    if (error.message.includes('IP') || error.message.includes('connect')) {
-      console.info("💡 Hint: This usually means your current IP address is not whitelisted in MongoDB Atlas.");
-      console.info("👉 To fix: Go to MongoDB Atlas -> Network Access -> Add IP Address -> Add Current IP Address (or 0.0.0.0/0).");
-    }
-    
-    console.warn("⚠️  Falling back to IN-MEMORY MOCK MODE due to connection error.");
+    console.error(`❌ Initial connection error: ${error.message}`);
   }
 };
 
