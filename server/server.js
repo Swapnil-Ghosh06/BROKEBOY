@@ -18,13 +18,16 @@ app.use('/api/settings', settings);
 
 // Debug route
 app.get('/api/health', (req, res) => {
-  const mongoose = require('mongoose');
   const uri = process.env.MONGO_URI;
   res.json({
     mongoUriSet: !!uri,
-    mongoUriPreview: uri ? `${uri.slice(0, 30)}...` : 'NOT SET',
+    uriLength: uri ? uri.length : 0,
+    uriStartsWith: uri ? uri.slice(0, 15) : 'N/A',
+    uriEndsWith: uri ? uri.slice(-15) : 'N/A',
+    hasQuotes: uri ? (uri.startsWith('"') || uri.startsWith("'")) : false,
     dbState: mongoose.connection.readyState,
     dbError: global.lastDbError || null,
+    nodeEnv: process.env.NODE_ENV
   });
 });
 
