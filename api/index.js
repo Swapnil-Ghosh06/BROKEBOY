@@ -23,7 +23,7 @@ app.get('/api/health', (req, res) => {
     dbConnected: mongoose.connection.readyState === 1,
     dbState: mongoose.connection.readyState,
     dbError: global.lastDbError || null,
-    uriUsed: (process.env.MONGO_URI || '').replace(/\/\/(.*?):(.*?)@/, '// $1:****@'),
+    uriUsed: (process.env.MONGO_URI || '').replace(/\/\/(.*?):(.*?)@/, '//$1:****@'),
     nodeEnv: process.env.NODE_ENV,
     timestamp: new Date().toISOString()
   });
