@@ -23,6 +23,7 @@ app.get('/api/health', (req, res) => {
     dbConnected: mongoose.connection.readyState === 1,
     dbState: mongoose.connection.readyState,
     dbError: global.lastDbError || null,
+    uriUsed: (process.env.MONGO_URI || '').replace(/:([^@]+)@/, ':****@'),
     nodeEnv: process.env.NODE_ENV,
     timestamp: new Date().toISOString()
   });
@@ -39,21 +40,25 @@ const connectDB = async () => {
   try {
     const uri = process.env.MONGO_URI;
     
-    if (!uri || uri.includes('<username>') || uri.includes('<password>')) {
-      global.lastDbError = "MONGO_URI is missing or contains placeholders.";
-      console.warn("⚠️  MONGO_URI is missing or contains placeholders.");
+    if (!uri) {
+      global.lastDbError = "MONGO_URI is completely missing.";
+      console.error("❌ CRITICAL: MONGO_URI is missing.");
       return;
     }
 
-    console.log("🔍 Attempting to connect to MongoDB...");
-    const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
+    const safeUri = uri.replace(/:([^@]+)@/, ':****@');
+    console.log(`🔍 Connecting to: ${safeUri}`);
+
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 8000,
+      heartbeatFrequencyMS: 2000,
     });
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    
+    console.log(`✅ MongoDB Connected Successfully`);
     global.lastDbError = null;
   } catch (error) {
-    global.lastDbError = error.message;
-    console.error(`❌ MongoDB Connection Error: ${error.message}`);
+    global.lastDbError = `${error.name}: ${error.message}`;
+    console.error(`❌ MongoDB Connection Error: ${error.name} - ${error.message}`);
   }
 };
 
