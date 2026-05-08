@@ -23,7 +23,7 @@ app.get('/api/health', (req, res) => {
     dbConnected: mongoose.connection.readyState === 1,
     dbState: mongoose.connection.readyState,
     dbError: global.lastDbError || null,
-    uriUsed: (process.env.MONGO_URI || '').replace(/:([^@]+)@/, ':****@'),
+    uriUsed: (process.env.MONGO_URI || '').replace(/\/\/(.*?):(.*?)@/, '// $1:****@'),
     nodeEnv: process.env.NODE_ENV,
     timestamp: new Date().toISOString()
   });
@@ -42,23 +42,23 @@ const connectDB = async () => {
     
     if (!uri) {
       global.lastDbError = "MONGO_URI is completely missing.";
-      console.error("❌ CRITICAL: MONGO_URI is missing.");
       return;
     }
 
-    const safeUri = uri.replace(/:([^@]+)@/, ':****@');
+    // Better obfuscation: keep mongodb://user: and replace password
+    const safeUri = uri.replace(/\/\/(.*?):(.*?)@/, '// $1:****@');
     console.log(`🔍 Connecting to: ${safeUri}`);
 
     await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 8000,
-      heartbeatFrequencyMS: 2000,
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
     });
     
     console.log(`✅ MongoDB Connected Successfully`);
     global.lastDbError = null;
   } catch (error) {
     global.lastDbError = `${error.name}: ${error.message}`;
-    console.error(`❌ MongoDB Connection Error: ${error.name} - ${error.message}`);
+    console.error(`❌ MongoDB Connection Error: ${error.name}`);
   }
 };
 
