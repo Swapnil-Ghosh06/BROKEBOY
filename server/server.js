@@ -49,6 +49,9 @@ mongoose.connection.on('disconnected', () => {
 // Connect to MongoDB
 const connectDB = async () => {
   try {
+    console.log("🔍 Attempting to connect to MongoDB...");
+    console.log(`📡 URI found: ${process.env.MONGO_URI ? 'YES' : 'NO'}`);
+    
     if (!process.env.MONGO_URI || process.env.MONGO_URI.includes('<username>') || process.env.MONGO_URI.includes('<password>')) {
       global.lastDbError = "MONGO_URI is missing or contains placeholders.";
       console.warn("⚠️  MONGO_URI is not defined or is still a placeholder.");
@@ -56,7 +59,8 @@ const connectDB = async () => {
     }
     
     // Set connection options for better stability in 2026
-    await mongoose.connect(process.env.MONGO_URI);
+    const conn = await mongoose.connect(process.env.MONGO_URI);
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     global.lastDbError = null;
   } catch (error) {
     global.lastDbError = error.message;
