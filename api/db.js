@@ -16,10 +16,7 @@ const connectDB = async () => {
       return;
     }
 
-    const safeUri = uri.replace(/\/\/(.*?):(.*?)@/, '//$1:****@');
-    console.log(`🔍 Connecting to: ${safeUri}`);
-
-    // Native driver test
+    // Native driver test (keep for silent validation)
     const client = new MongoClient(uri, {
       serverSelectionTimeoutMS: 15000,
     });
@@ -32,7 +29,6 @@ const connectDB = async () => {
       connectTimeoutMS: 15000,
     });
 
-    console.log(`✅ MongoDB Connected Successfully`);
     global.lastDbError = null;
     cachedDb = conn;
     return conn;
