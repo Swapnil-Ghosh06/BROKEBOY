@@ -2,11 +2,15 @@ const express = require('express');
 const router = express.Router();
 const Expense = require('../models/Expense');
 const mongoose = require('mongoose');
+const connectDB = require('../db');
 
 // Middleware to check DB connection status
-const checkConnection = (req, res, next) => {
-  // We no longer wait/block. We just check the state.
-  // This prevents UI timeouts on refresh.
+const checkConnection = async (req, res, next) => {
+  try {
+    await connectDB();
+  } catch (e) {
+    // Error logged in connectDB
+  }
   next();
 };
 

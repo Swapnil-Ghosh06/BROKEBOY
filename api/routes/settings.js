@@ -1,6 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const Settings = require('../models/Settings');
+const connectDB = require('../db');
+
+// Middleware to check DB connection status
+const checkConnection = async (req, res, next) => {
+  try {
+    await connectDB();
+  } catch (e) {
+    // Error logged in connectDB
+  }
+  next();
+};
+
+router.use(checkConnection);
 
 // GET /api/settings - Fetch budget settings
 router.get('/', async (req, res) => {
