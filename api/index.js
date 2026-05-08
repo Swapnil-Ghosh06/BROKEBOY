@@ -36,6 +36,7 @@ global.lastDbError = null;
 global.mockExpenses = [];
 
 // Connect to MongoDB
+const { MongoClient } = require('mongodb');
 let cachedDb = null;
 
 const connectDB = async () => {
@@ -51,21 +52,30 @@ const connectDB = async () => {
     }
 
     const safeUri = uri.replace(/\/\/(.*?):(.*?)@/, '//$1:****@');
-    console.log(`🔍 Connecting to: ${safeUri}`);
+    console.log(`🔍 Raw Connecting to: ${safeUri}`);
 
+    // First, test with native driver to bypass any Mongoose bugs
+    const client = new MongoClient(uri, {
+      serverSelectionTimeoutMS: 15000,
+    });
+    await client.connect();
+    console.log("✅ Native Driver Connected");
+    await client.close();
+
+    // If native works, Mongoose should work
     const conn = await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 15000,
       socketTimeoutMS: 45000,
       connectTimeoutMS: 15000,
     });
 
-    console.log(`✅ MongoDB Connected Successfully`);
+    console.log(`✅ Mongoose Connected Successfully`);
     global.lastDbError = null;
     cachedDb = conn;
     return conn;
   } catch (error) {
     global.lastDbError = `${error.name}: ${error.message}`;
-    console.error(`❌ MongoDB Connection Error: ${error.name}`);
+    console.error(`❌ Connection Error: ${error.name} - ${error.message}`);
     cachedDb = null;
   }
 };
