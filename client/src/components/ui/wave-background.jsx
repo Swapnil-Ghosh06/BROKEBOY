@@ -248,13 +248,13 @@ export function Waves({
                     left: 0,
                     width: `${pointerSize}rem`,
                     height: `${pointerSize}rem`,
-                    background: '#ffffff',
-                    boxShadow: '0 0 20px rgba(255,255,255,0.4)',
+                    background: 'transparent',
+                    boxShadow: 'none',
                     borderRadius: '50%',
                     transform: 'translate3d(calc(var(--x) - 50%), calc(var(--y) - 50%), 0)',
                     willChange: 'transform',
-                    transition: 'opacity 0.3s ease',
-                    opacity: 1,
+                    opacity: 0,
+                    pointerEvents: 'none',
                 }}
             />
         </div>
