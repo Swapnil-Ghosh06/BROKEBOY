@@ -171,7 +171,7 @@ export default function BentoDashboard({ expenses, totalExpenses, monthlyLimit, 
               transition={{ duration: 0.6 }}
               className="font-display text-4xl font-extrabold text-white tracking-tighter"
             >
-              BrokeBoy<span className="text-white/40">.</span>
+              BrokeBoy<span className="text-white/40"></span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
