@@ -12,7 +12,7 @@ const About = () => {
       >
         <div className="mb-6">
           <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-purple-400 mb-4">
-            BrokeBoy.
+            BrokeBoy
           </h1>
         </div>
 
