@@ -6,12 +6,20 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api/news.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "client/package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "dist" }
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/news",
+      "destination": "/api/news.js"
+    },
     {
       "source": "/api/(.*)",
       "destination": "/api/index.js"
