@@ -217,15 +217,18 @@ function App() {
           )}
         </div>
       </div>
-      <div className="fixed top-1/2 right-6 -translate-y-1/2 z-50 w-full max-w-[320px] pointer-events-auto hidden xl:block">
-        <GlassWalletCard 
-          balance={currentBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-          trend={`${percentageUsed}% Used`}
-          trendUp={!isOverLimit}
-          onSend={handleSetLimit}
-          onReceive={handleAddFunds}
-        />
-      </div>
+      {activeTab === 'dashboard' && (
+  <div className="fixed top-1/2 right-6 -translate-y-1/2 z-50 w-full max-w-[320px] pointer-events-auto hidden xl:block">
+    <GlassWalletCard
+      balance={currentBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+      trend={`${percentageUsed}% Used`}
+      trendUp={!isOverLimit}
+      onSend={handleSetLimit}
+      onReceive={handleAddFunds}
+    />
+  </div>
+)}
+
 
       {/* Mobile/Tablet Wallet Card */}
       <div className="xl:hidden">
