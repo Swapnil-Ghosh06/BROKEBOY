@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
-import { TrendingUp, TrendingDown, Flame, Shield, Zap, Calendar } from 'lucide-react';
+import { TrendingUp, TrendingDown, Flame, Shield, Zap, Calendar, Trash2 } from 'lucide-react';
 import ExpenseList from './ExpenseList';
 
 const categoryConfig = {
@@ -113,7 +113,7 @@ function StatCard({ icon: Icon, label, value, subtext, accentColor, delay = 0 })
   );
 }
 
-export default function BentoDashboard({ expenses, totalExpenses, monthlyLimit, currentBalance, percentageUsed, isOverLimit, onDelete }) {
+export default function BentoDashboard({ expenses, totalExpenses, monthlyLimit, currentBalance, percentageUsed, isOverLimit, onDelete, onReset }) {
   const headerRef = useRef(null);
   const greeting = getGreeting();
   const today = new Date();
@@ -182,14 +182,26 @@ export default function BentoDashboard({ expenses, totalExpenses, monthlyLimit, 
               {greeting.emoji} {greeting.text} — {dateStr}
             </motion.p>
           </div>
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', delay: 0.4 }}
-            className="glass px-3 py-1.5 rounded-full border border-white/10 text-xs text-white/50 font-semibold"
-          >
-            {daysLeft}d left
-          </motion.div>
+          <div className="flex items-center gap-3">
+            <motion.button
+              onClick={onReset}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', delay: 0.3 }}
+              className="glass p-2 rounded-full border border-red-500/20 text-red-400/70 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/40 transition-all group"
+              title="Reset All Data"
+            >
+              <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            </motion.button>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', delay: 0.4 }}
+              className="glass px-3 py-1.5 rounded-full border border-white/10 text-xs text-white/50 font-semibold"
+            >
+              {daysLeft}d left
+            </motion.div>
+          </div>
         </div>
       </header>
 

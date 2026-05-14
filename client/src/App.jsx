@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 import gsap from 'gsap';
 import SummaryBar from './components/SummaryBar';
 import ExpenseList from './components/ExpenseList';
@@ -115,6 +116,28 @@ function App() {
   const isOverLimit = totalExpenses > monthlyLimit;
   const percentageUsed = monthlyLimit > 0 ? ((totalExpenses / monthlyLimit) * 100).toFixed(1) : 0;
 
+  const handleResetApp = async () => {
+    if (!window.confirm('Are you sure you want to reset everything? This will clear your balance, limit, and ALL transactions. This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API_URL}/api/expenses/reset/all`);
+      setExpenses([]);
+      
+      await axios.post(`${API_URL}/api/settings`, {
+        initialBalance: 0,
+        monthlyLimit: 0
+      });
+      setInitialBalance(0);
+      setMonthlyLimit(0);
+      
+    } catch (error) {
+      console.error('Error resetting app:', error);
+      alert('Failed to reset app. Please try again.');
+    }
+  };
+
   const handleAddFunds = () => {
     const amount = prompt('Enter amount to add to your balance:', '1000');
     if (amount && !isNaN(amount)) {
@@ -201,7 +224,7 @@ function App() {
         </div>
       </div>
 
-      <div className="fixed top-6 right-6 z-[60] flex items-center gap-3">
+      <div className="fixed top-6 right-6 z-[60] flex flex-col items-end gap-2">
         <div 
           title={dbError || (isDbConnected ? 'Connected to MongoDB Atlas' : 'Checking connection...')}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full glass border transition-all duration-500 cursor-help ${isDbConnected ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'}`}
@@ -216,6 +239,19 @@ function App() {
             </span>
           )}
         </div>
+        
+        {!isDbConnected && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-xl backdrop-blur-md shadow-lg shadow-red-500/10"
+          >
+            <p className="text-[10px] text-red-400 font-bold uppercase tracking-[0.1em] flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              Refresh 2-3 times to wake up database
+            </p>
+          </motion.div>
+        )}
       </div>
       {activeTab === 'dashboard' && (
   <div className="fixed top-1/2 right-6 -translate-y-1/2 z-50 w-full max-w-[320px] pointer-events-auto hidden xl:block">
@@ -259,6 +295,7 @@ function App() {
             percentageUsed={percentageUsed}
             isOverLimit={isOverLimit}
             onDelete={handleDeleteExpense}
+            onReset={handleResetApp}
           />
         )
       ) : activeTab === 'features' ? (
