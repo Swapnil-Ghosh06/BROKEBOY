@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
@@ -10,13 +10,28 @@ import Learn from './components/Learn';
 import InteractiveSelector from './components/ui/interactive-selector';
 import { GlassWalletCard } from './components/ui/glass-wallet-card';
 import About from './components/About';
-import { Home, LayoutGrid, Newspaper, User } from 'lucide-react';
+import AuthScreen from './components/AuthScreen';
+import { Home, LayoutGrid, Newspaper, User, LogOut } from 'lucide-react';
 
 import BentoDashboard from './components/BentoDashboard';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
+// Configure axios interceptor for auth token
+const setupAxiosAuth = (token) => {
+  if (token) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete axios.defaults.headers.common['Authorization'];
+  }
+};
+
 function App() {
+  // Auth State
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem('brokeboy_token'));
+  const [authChecked, setAuthChecked] = useState(false);
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [expenses, setExpenses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,11 +42,73 @@ function App() {
   const [initialBalance, setInitialBalance] = useState(0);
   const [monthlyLimit, setMonthlyLimit] = useState(0);
 
+  // Set auth header on mount and token changes
   useEffect(() => {
-    checkHealth();
-    fetchExpenses();
-    fetchSettings();
+    setupAxiosAuth(token);
+    if (token) {
+      verifyToken();
+    } else {
+      setAuthChecked(true);
+      setIsLoading(false);
+    }
   }, []);
+
+  // Verify stored token and restore session
+  const verifyToken = async () => {
+    try {
+      setupAxiosAuth(token);
+      const res = await axios.get(`${API_URL}/api/auth/me`);
+      if (res.data.success) {
+        setUser(res.data.data);
+        // Load user data after auth verified
+        checkHealth();
+        fetchExpenses();
+        fetchSettings();
+      } else {
+        handleLogout();
+      }
+    } catch (error) {
+      handleLogout();
+    } finally {
+      setAuthChecked(true);
+    }
+  };
+
+  // Handle login/signup
+  const handleAuth = async (mode, credentials) => {
+    const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+    
+    try {
+      const res = await axios.post(`${API_URL}${endpoint}`, credentials);
+      if (res.data.success) {
+        const { token: newToken, ...userData } = res.data.data;
+        setToken(newToken);
+        setUser(userData);
+        localStorage.setItem('brokeboy_token', newToken);
+        setupAxiosAuth(newToken);
+        
+        // Load user data
+        checkHealth();
+        fetchExpenses();
+        fetchSettings();
+      }
+    } catch (error) {
+      const message = error.response?.data?.error || 'Something went wrong';
+      throw new Error(message);
+    }
+  };
+
+  // Logout
+  const handleLogout = () => {
+    setUser(null);
+    setToken(null);
+    setExpenses([]);
+    setInitialBalance(0);
+    setMonthlyLimit(0);
+    localStorage.removeItem('brokeboy_token');
+    setupAxiosAuth(null);
+    setIsLoading(false);
+  };
 
   const checkHealth = async () => {
     try {
@@ -156,6 +233,29 @@ function App() {
     }
   };
 
+  // Show nothing until we've checked auth
+  if (!authChecked) {
+    return (
+      <>
+        <Waves />
+        <div className="min-h-screen flex items-center justify-center relative z-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+        </div>
+      </>
+    );
+  }
+
+  // Not logged in — show auth screen
+  if (!user) {
+    return (
+      <>
+        <Waves />
+        <AuthScreen onAuth={handleAuth} />
+      </>
+    );
+  }
+
+  // Logged in — show app
   return (
     <>
       <Waves />
@@ -191,12 +291,20 @@ function App() {
           >
             <User className="w-6 h-6" />
           </button>
+          <div className="h-px bg-white/10 mx-2" />
+          <button 
+            onClick={handleLogout}
+            title="Logout"
+            className="p-3 rounded-full transition-all duration-300 text-red-400/50 hover:text-red-400 hover:bg-red-500/10"
+          >
+            <LogOut className="w-6 h-6" />
+          </button>
         </div>
       </div>
 
       {/* Mobile Bottom Navigation Bar */}
       <div className="fixed bottom-4 left-4 right-4 z-50 flex justify-center pointer-events-none md:hidden">
-        <div className="glass px-4 py-2 rounded-full flex gap-6 pointer-events-auto border border-white/10 shadow-xl backdrop-blur-md w-full max-w-[320px] justify-between">
+        <div className="glass px-4 py-2 rounded-full flex gap-4 pointer-events-auto border border-white/10 shadow-xl backdrop-blur-md w-full max-w-[360px] justify-between">
           <button 
             onClick={() => setActiveTab('dashboard')}
             className={`p-2 rounded-full transition-all duration-300 ${activeTab === 'dashboard' ? 'bg-white text-black shadow-[0_0_10px_rgba(255,255,255,0.4)]' : 'text-white/40 hover:text-white'}`}
@@ -220,6 +328,12 @@ function App() {
             className={`p-2 rounded-full transition-all duration-300 ${activeTab === 'about' ? 'bg-white text-black shadow-[0_0_10px_rgba(255,255,255,0.4)]' : 'text-white/40 hover:text-white'}`}
           >
             <User className="w-6 h-6" />
+          </button>
+          <button 
+            onClick={handleLogout}
+            className="p-2 rounded-full transition-all duration-300 text-red-400/50 hover:text-red-400"
+          >
+            <LogOut className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -296,6 +410,7 @@ function App() {
             isOverLimit={isOverLimit}
             onDelete={handleDeleteExpense}
             onReset={handleResetApp}
+            userName={user?.name}
           />
         )
       ) : activeTab === 'features' ? (

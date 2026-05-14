@@ -5,6 +5,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const expenses = require('./routes/expenses');
 const settings = require('./routes/settings');
+const auth = require('./routes/auth');
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(cors());
 
 // Routes
+app.use('/api/auth', auth);
 app.use('/api/expenses', expenses);
 app.use('/api/settings', settings);
 

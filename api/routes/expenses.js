@@ -3,49 +3,42 @@ const router = express.Router();
 const Expense = require('../models/Expense');
 const mongoose = require('mongoose');
 const connectDB = require('../db');
+const { protect } = require('../middleware/authMiddleware');
 
-// Middleware to check DB connection status
+// Ensure DB connection
 const checkConnection = async (req, res, next) => {
   try {
     await connectDB();
   } catch (e) {
-    // Error logged in connectDB
+    // logged in connectDB
   }
   next();
 };
 
 router.use(checkConnection);
+router.use(protect);
 
-// GET /api/expenses - Fetch all expenses (sorted by date desc)
+// GET /api/expenses — fetch user's expenses
 router.get('/', async (req, res) => {
   try {
     if (mongoose.connection.readyState !== 1) {
-      const expenses = [...global.mockExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
-      return res.json({ 
-        success: true, 
-        data: expenses, 
-        isMock: true,
-        dbError: global.lastDbError || "Database is disconnected or still connecting."
-      });
+      const expenses = (global.mockExpenses || [])
+        .filter(e => e.userId === req.user.id)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+      return res.json({ success: true, data: expenses });
     }
-    const expenses = await Expense.find().sort({ date: -1 });
-    res.json({ 
-      success: true, 
-      data: expenses, 
-      isMock: false,
-      dbError: null
-    });
+    const expenses = await Expense.find({ userId: req.user.id }).sort({ date: -1 });
+    res.json({ success: true, data: expenses });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server Error' });
   }
 });
 
-// POST /api/expenses - Create a new expense
+// POST /api/expenses — create expense for user
 router.post('/', async (req, res) => {
   try {
     const { title, amount, category, date } = req.body;
-    
-    // Validation
+
     if (!title || amount === undefined || !category) {
       return res.status(400).json({ success: false, error: 'Please provide all required fields' });
     }
@@ -53,35 +46,56 @@ router.post('/', async (req, res) => {
     if (mongoose.connection.readyState !== 1) {
       const newExpense = {
         _id: Math.random().toString(36).substr(2, 9),
+        userId: req.user.id,
         title,
         amount,
         category,
         date: date || new Date().toISOString(),
         createdAt: new Date().toISOString()
       };
+      global.mockExpenses = global.mockExpenses || [];
       global.mockExpenses.push(newExpense);
-      return res.status(201).json({ success: true, data: newExpense, isMock: true });
+      return res.status(201).json({ success: true, data: newExpense });
     }
 
     const expense = await Expense.create({
+      userId: req.user.id,
       title,
       amount,
       category,
       date: date || Date.now()
     });
 
-    res.status(201).json({ success: true, data: expense, isMock: false });
+    res.status(201).json({ success: true, data: expense });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: 'Server Error' });
   }
 });
 
-// DELETE /api/expenses/:id - Delete expense by ID
+// DELETE /api/expenses/reset/all — delete all user's expenses
+router.delete('/reset/all', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      global.mockExpenses = (global.mockExpenses || []).filter(e => e.userId !== req.user.id);
+      return res.json({ success: true, message: 'All expenses deleted' });
+    }
+
+    await Expense.deleteMany({ userId: req.user.id });
+    res.json({ success: true, message: 'All expenses deleted' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: 'Server Error' });
+  }
+});
+
+// DELETE /api/expenses/:id — delete single expense (only if owned by user)
 router.delete('/:id', async (req, res) => {
   try {
     if (mongoose.connection.readyState !== 1) {
-      const index = global.mockExpenses.findIndex(e => e._id === req.params.id);
+      const index = (global.mockExpenses || []).findIndex(
+        e => e._id === req.params.id && e.userId === req.user.id
+      );
       if (index === -1) {
         return res.status(404).json({ success: false, error: 'Expense not found' });
       }
@@ -89,30 +103,14 @@ router.delete('/:id', async (req, res) => {
       return res.json({ success: true, data: {} });
     }
 
-    const expense = await Expense.findById(req.params.id);
-    
+    const expense = await Expense.findOne({ _id: req.params.id, userId: req.user.id });
+
     if (!expense) {
       return res.status(404).json({ success: false, error: 'Expense not found' });
     }
 
     await expense.deleteOne();
     res.json({ success: true, data: {} });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, error: 'Server Error' });
-  }
-});
-
-// DELETE /api/expenses/reset/all - Delete all expenses
-router.delete('/reset/all', async (req, res) => {
-  try {
-    if (mongoose.connection.readyState !== 1) {
-      global.mockExpenses = [];
-      return res.json({ success: true, message: 'All mock expenses deleted' });
-    }
-
-    await Expense.deleteMany({});
-    res.json({ success: true, message: 'All expenses deleted' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: 'Server Error' });

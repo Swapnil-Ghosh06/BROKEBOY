@@ -113,7 +113,7 @@ function StatCard({ icon: Icon, label, value, subtext, accentColor, delay = 0 })
   );
 }
 
-export default function BentoDashboard({ expenses, totalExpenses, monthlyLimit, currentBalance, percentageUsed, isOverLimit, onDelete, onReset }) {
+export default function BentoDashboard({ expenses, totalExpenses, monthlyLimit, currentBalance, percentageUsed, isOverLimit, onDelete, onReset, userName }) {
   const headerRef = useRef(null);
   const greeting = getGreeting();
   const today = new Date();
@@ -171,7 +171,7 @@ export default function BentoDashboard({ expenses, totalExpenses, monthlyLimit, 
               transition={{ duration: 0.6 }}
               className="font-display text-4xl font-extrabold text-white tracking-tighter"
             >
-              BrokeBoy<span className="text-white/40"></span>
+              {userName ? `Hey, ${userName.split(' ')[0]}` : 'BrokeBoy'}<span className="text-white/40"></span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
