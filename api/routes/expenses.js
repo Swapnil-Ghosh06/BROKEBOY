@@ -103,4 +103,20 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/expenses/reset/all - Delete all expenses
+router.delete('/reset/all', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      global.mockExpenses = [];
+      return res.json({ success: true, message: 'All mock expenses deleted' });
+    }
+
+    await Expense.deleteMany({});
+    res.json({ success: true, message: 'All expenses deleted' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: 'Server Error' });
+  }
+});
+
 module.exports = router;
