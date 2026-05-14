@@ -10,16 +10,23 @@ export default function AuthScreen({ onAuth }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDbWaking, setIsDbWaking] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsDbWaking(false);
     setIsLoading(true);
 
     try {
       await onAuth(mode, { name, email, password });
     } catch (err) {
-      setError(err.message || 'Something went wrong');
+      const msg = err.message || 'Something went wrong';
+      if (msg.toLowerCase().includes('waking up') || msg.toLowerCase().includes('database is')) {
+        setIsDbWaking(true);
+      } else {
+        setError(msg);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -162,6 +169,24 @@ export default function AuthScreen({ onAuth }) {
                 <p className="text-[10px] text-white/20 mt-1.5 ml-1">Minimum 6 characters</p>
               )}
             </div>
+
+            {/* DB Waking Warning */}
+            <AnimatePresence>
+              {isDbWaking && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 space-y-1"
+                >
+                  <p className="text-amber-400 text-sm font-semibold flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
+                    Database is waking up...
+                  </p>
+                  <p className="text-amber-400/60 text-xs">Please wait a few seconds and try again.</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Error */}
             <AnimatePresence>

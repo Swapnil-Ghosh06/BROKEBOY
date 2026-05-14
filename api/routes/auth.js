@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const connectDB = require('../db');
 const { protect } = require('../middleware/authMiddleware');
@@ -11,17 +12,25 @@ const generateToken = (id) => {
   });
 };
 
-// Middleware to ensure DB connection
-const checkConnection = async (req, res, next) => {
+// Ensure DB connection before every auth request
+const requireDB = async (req, res, next) => {
   try {
     await connectDB();
   } catch (e) {
     // logged in connectDB
   }
+
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      error: 'Database is waking up — please wait a moment and try again.',
+    });
+  }
+
   next();
 };
 
-router.use(checkConnection);
+router.use(requireDB);
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -53,8 +62,12 @@ router.post('/register', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ success: false, error: 'Server error during registration' });
+    console.error('Register error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Registration failed — please try again.',
+      detail: process.env.NODE_ENV !== 'production' ? error.message : undefined,
+    });
   }
 });
 
@@ -87,12 +100,16 @@ router.post('/login', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ success: false, error: 'Server error during login' });
+    console.error('Login error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Login failed — please try again.',
+      detail: process.env.NODE_ENV !== 'production' ? error.message : undefined,
+    });
   }
 });
 
-// GET /api/auth/me — get current user from token
+// GET /api/auth/me
 router.get('/me', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);

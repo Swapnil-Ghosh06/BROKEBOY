@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -9,6 +10,19 @@ const generateToken = (id) => {
     expiresIn: '30d',
   });
 };
+
+// Require live DB connection for auth
+const requireDB = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      error: 'Database is waking up — please wait a moment and try again.',
+    });
+  }
+  next();
+};
+
+router.use(requireDB);
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -40,8 +54,8 @@ router.post('/register', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ success: false, error: 'Server error during registration' });
+    console.error('Register error:', error.message);
+    res.status(500).json({ success: false, error: 'Registration failed — please try again.' });
   }
 });
 
@@ -74,8 +88,8 @@ router.post('/login', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ success: false, error: 'Server error during login' });
+    console.error('Login error:', error.message);
+    res.status(500).json({ success: false, error: 'Login failed — please try again.' });
   }
 });
 
