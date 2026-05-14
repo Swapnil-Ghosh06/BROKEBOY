@@ -65,8 +65,8 @@ router.post('/register', async (req, res) => {
     console.error('Register error:', error.message);
     res.status(500).json({
       success: false,
-      error: 'Registration failed — please try again.',
-      detail: process.env.NODE_ENV !== 'production' ? error.message : undefined,
+      error: error.message || 'Registration failed — please try again.',
+      detail: error.stack
     });
   }
 });
