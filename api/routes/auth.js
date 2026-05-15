@@ -23,7 +23,7 @@ const requireDB = async (req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({
       success: false,
-      error: 'Database is waking up — please wait a moment and try again.',
+      error: `Database is waking up — please wait a moment and try again. (${global.lastDbError || 'Connecting...'})`,
     });
   }
 
