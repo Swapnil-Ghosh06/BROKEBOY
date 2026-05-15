@@ -22,10 +22,9 @@ export default function AuthScreen({ onAuth }) {
       await onAuth(mode, { name, email, password });
     } catch (err) {
       const msg = err.message || 'Something went wrong';
+      setError(msg);
       if (msg.toLowerCase().includes('waking up') || msg.toLowerCase().includes('database is')) {
         setIsDbWaking(true);
-      } else {
-        setError(msg);
       }
     } finally {
       setIsLoading(false);
@@ -181,16 +180,18 @@ export default function AuthScreen({ onAuth }) {
                 >
                   <p className="text-amber-400 text-sm font-semibold flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
-                    Database is waking up...
+                    Connecting to Database...
                   </p>
-                  <p className="text-amber-400/60 text-xs">Please wait a few seconds and try again.</p>
+                  <p className="text-amber-400/80 text-[11px] leading-relaxed italic">
+                    {error || "Database is waking up — please wait a few seconds and try again."}
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
 
             {/* Error */}
             <AnimatePresence>
-              {error && (
+              {error && !isDbWaking && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
