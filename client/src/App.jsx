@@ -65,10 +65,29 @@ function App() {
         fetchExpenses();
         fetchSettings();
       } else {
+        // Bad token response — clear it
         handleLogout();
       }
     } catch (error) {
-      handleLogout();
+      const status = error.response?.status;
+      if (status === 401) {
+        // Token is invalid/expired — logout
+        handleLogout();
+      } else {
+        // DB offline / network error — decode token locally to restore user state
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          setUser({ _id: payload.id, name: 'User', email: '' }); // minimal user stub
+        } catch {
+          // Token is malformed — logout
+          handleLogout();
+          return;
+        }
+        setIsLoading(false);
+        checkHealth();
+        fetchExpenses();
+        fetchSettings();
+      }
     } finally {
       setAuthChecked(true);
     }
@@ -130,6 +149,7 @@ function App() {
         setMonthlyLimit(res.data.data.monthlyLimit);
       }
     } catch (error) {
+      if (error.response?.status === 401) handleLogout();
       console.error('Error fetching settings:', error);
     }
   };
@@ -152,6 +172,7 @@ function App() {
         setExpenses(res.data.data);
       }
     } catch (error) {
+      if (error.response?.status === 401) handleLogout();
       console.error('Error fetching expenses:', error);
     } finally {
       setIsLoading(false);
